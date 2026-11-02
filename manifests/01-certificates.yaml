@@ -1,0 +1,23 @@
+# Prerequisite: install cert-manager, configure a trusted Issuer/ClusterIssuer named telemetry-ca,
+# and provision a ConfigMap named telemetry-trust-bundle with key ca.crt in telemetry-secure.
+# The trust bundle must be distributed from a trusted PKI source, not self-reported by clients.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: otel-gateway
+  namespace: telemetry-secure
+spec:
+  secretName: otel-gateway-tls
+  duration: 2160h
+  renewBefore: 360h
+  privateKey:
+    rotationPolicy: Always
+    algorithm: ECDSA
+    size: 256
+  usages: [server auth, client auth]
+  dnsNames:
+  - otel-gateway.telemetry-secure.svc
+  - otel-gateway.telemetry-secure.svc.cluster.local
+  issuerRef:
+    name: telemetry-ca
+    kind: ClusterIssuer

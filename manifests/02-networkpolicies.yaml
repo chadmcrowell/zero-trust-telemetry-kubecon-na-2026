@@ -1,0 +1,42 @@
+# Requires a CNI that enforces Kubernetes NetworkPolicy.
+# Adjust namespaces, labels, DNS and backend identity for your cluster.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: telemetry-secure
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: otel-gateway-allow
+  namespace: telemetry-secure
+spec:
+  podSelector:
+    matchLabels: {app: otel-gateway}
+  policyTypes: [Ingress, Egress]
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels: {telemetry-client: "true"}
+      podSelector:
+        matchLabels: {telemetry-exporter: "true"}
+    ports:
+    - {protocol: TCP, port: 4317}
+  egress:
+  - to:
+    - podSelector:
+        matchLabels: {app: otel-backend}
+    ports:
+    - {protocol: TCP, port: 4317}
+  - to:
+    - namespaceSelector:
+        matchLabels: {kubernetes.io/metadata.name: kube-system}
+      podSelector:
+        matchLabels: {k8s-app: kube-dns}
+    ports:
+    - {protocol: UDP, port: 53}
+    - {protocol: TCP, port: 53}

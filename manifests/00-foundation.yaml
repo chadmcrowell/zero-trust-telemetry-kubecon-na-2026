@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: telemetry-secure
+  labels:
+    kubernetes.io/metadata.name: telemetry-secure
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-gateway
+  namespace: telemetry-secure
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-gateway-config
+  namespace: telemetry-secure
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+            tls:
+              cert_file: /certs/tls.crt
+              key_file: /certs/tls.key
+              client_ca_file: /trust/ca.crt
+              reload_interval: 1m
+              client_ca_file_reload: true
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 256
+      batch: {}
+    exporters:
+      otlp:
+        endpoint: otel-backend.telemetry-secure.svc.cluster.local:4317
+        tls:
+          ca_file: /trust/ca.crt
+          cert_file: /certs/tls.crt
+          key_file: /certs/tls.key
+          reload_interval: 1m
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [otlp]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [otlp]
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [otlp]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-gateway
+  namespace: telemetry-secure
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: otel-gateway}
+  template:
+    metadata:
+      labels: {app: otel-gateway}
+    spec:
+      serviceAccountName: otel-gateway
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+      - name: collector
+        image: otel/opentelemetry-collector-contrib:0.136.0 # Pin and validate a supported release before deployment
+        args: ["--config=/conf/config.yaml"]
+        ports:
+        - {name: otlp-grpc, containerPort: 4317}
+        resources:
+          requests: {cpu: 100m, memory: 128Mi}
+          limits: {memory: 384Mi}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities: {drop: [ALL]}
+          seccompProfile: {type: RuntimeDefault}
+        volumeMounts:
+        - {name: config, mountPath: /conf, readOnly: true}
+        - {name: certs, mountPath: /certs, readOnly: true}
+        - {name: trust, mountPath: /trust, readOnly: true}
+      volumes:
+      - name: config
+        configMap: {name: otel-gateway-config}
+      - name: certs
+        secret: {secretName: otel-gateway-tls}
+      - name: trust
+        configMap: {name: telemetry-trust-bundle}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-gateway
+  namespace: telemetry-secure
+spec:
+  selector: {app: otel-gateway}
+  ports:
+  - {name: otlp-grpc, port: 4317, targetPort: 4317}
