@@ -21,6 +21,8 @@ See [VALIDATION.md](VALIDATION.md) for the proposed test plan and evidence check
 - Review Collector version and config fields, resource limits, cert reload behavior, namespace labels, DNS selectors, and source namespace egress policies. Some settings may require adaptation for the Collector release you choose.
 - Only after review: `kubectl apply -f manifests/00-foundation.yaml`, then `01-certificates.yaml`, then `02-networkpolicies.yaml`. **Applying default-deny can interrupt workloads.**
 
+
+
 ## What these blueprints demonstrate (and do not)
 
 - mTLS can authenticate peers and protect transport; it does not establish that the telemetry content itself is truthful.
@@ -28,6 +30,8 @@ See [VALIDATION.md](VALIDATION.md) for the proposed test plan and evidence check
 - NetworkPolicy limits selected L3/L4 flows; it is not application-layer authorization or a substitute for credential hygiene.
 - Hubble provides observed datapath verdicts from eBPF-backed telemetry. It **does not verify TLS identities, cryptographic integrity, or kernel isolation in full**.
 - The threat model includes Prometheus federation, logs, Falco, storage integrity, and AIOps; **those systems are not deployed** by this example.
+
+
 
 ## Adaptation checklist
 
@@ -39,11 +43,15 @@ See [VALIDATION.md](VALIDATION.md) for the proposed test plan and evidence check
 - [ ] Complete threat-model owners, likelihood, impacts, and residual risks.
 - [ ] Perform security review before any production use.
 
+
+
 ## Primary documentation
 
-- https://opentelemetry.io/docs/collector/configuration/
-- https://cert-manager.io/docs/usage/certificate/
-- https://kubernetes.io/docs/concepts/services-networking/network-policies/
-- https://docs.cilium.io/en/stable/observability/hubble/hubble-cli/
-- https://prometheus.io/docs/operating/security/
-- https://falco.org/docs/concepts/event-sources/plugins/kubernetes-audit/
+- [https://opentelemetry.io/docs/collector/configuration/](https://opentelemetry.io/docs/collector/configuration/)
+- [https://opentelemetry.io/docs/security/](https://opentelemetry.io/docs/security/)
+- [https://cert-manager.io/docs/usage/certificate/](https://cert-manager.io/docs/usage/certificate/)
+- [https://kubernetes.io/docs/concepts/services-networking/network-policies/](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
+- [https://docs.cilium.io/en/stable/observability/hubble/hubble-cli/](https://docs.cilium.io/en/stable/observability/hubble/hubble-cli/)
+- [https://prometheus.io/docs/operating/security/](https://prometheus.io/docs/operating/security/)
+- [https://falco.org/docs/concepts/event-sources/plugins/kubernetes-audit/](https://falco.org/docs/concepts/event-sources/plugins/kubernetes-audit/)
+
