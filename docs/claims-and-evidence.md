@@ -26,7 +26,7 @@ passing case is shown as such. Wording in talks or slides should not go beyond t
 
 Earlier runs (2026-11-02) were on a dirty tree and are superseded; they also found and fixed a flaky check in
 `send-telemetry` and a classifier gap behind a flaky E4 (see git history), so a single green run does not
-rule out remaining flakiness: E4 failed once among the several executions made before the fix (exact count not recorded).
+rule out remaining flakiness. The client-side TLS race (the Go client sees `connection reset` / `broken pipe` instead of the server's alert) caused E4 to fail once and, later, R2 to fail once (inside the baseline step of a mutation-check run on commit `2656cd6`). Both are now handled by requiring an independent `openssl` witness to observe the explicit alert; that fallback path has only been checked directly, not yet hit by a real race.
 
 Status vocabulary: **PASS** = executed and matched, including positive controls · **FAIL** · **NOT RUN** =
 not executed (never counted as success). "Executed in lab" means the lab described in

@@ -359,3 +359,15 @@ rollout_restart_wait() {
   for d in "$@"; do k -n "$NS_GATEWAY" rollout restart "deploy/$d" >/dev/null || return 1; done
   for d in "$@"; do k -n "$NS_GATEWAY" rollout status "deploy/$d" --timeout=150s >/dev/null || return 1; done
 }
+
+# tls_witness <ns> <host> <client-secret|""> [flow-style extra labels]: an independent `openssl s_client`
+# observation of how <host>:4317 treats the given client credential, run from a pod in <ns>. Used when a Go
+# client reports only an ambiguous PEER_RESET/broken pipe (it can lose the race against the server closing
+# after sending a TLS alert). The witness reliably reads the explicit alert. Prints sanitized key lines.
+tls_witness() {
+  local ns="$1" host="$2" sec="$3" labels="${4:-}" cert_args="" name
+  [ -n "$sec" ] && cert_args="-cert /client/tls.crt -key /client/tls.key"
+  name="zt-test-witness-$(LC_ALL=C tr -dc 'a-z0-9' </dev/urandom | head -c 5)"
+  TOOL_LABELS="$labels" TOOL_WAIT=40 run_tool_pod "$ns" "$name" true "$OPENSSL_IMAGE" \
+    "(printf x; sleep 2) | timeout 8 openssl s_client -connect ${host}:4317 -CAfile /trust/ca.crt -verify_hostname ${host} ${cert_args} -verify_return_error -alpn h2 2>&1 | grep -E 'Verify return|alert|error|Protocol|Cipher' | head -10" "$sec"
+}
