@@ -93,7 +93,7 @@ trap 'exit 130' INT TERM
 #   TLS_SERVER_CERT_UNTRUSTED client could not chain the server cert to its CA
 #   TLS_SERVER_NAME_MISMATCH  server cert valid but not for the name/IP dialed
 #   DNS_FAILURE | CONN_REFUSED | PEER_RESET | NETWORK_TIMEOUT | OTHER | NONE
-#   PEER_RESET (RST after TCP connect) is NOT accepted as proof of an auth rejection on its own: the
+#   PEER_RESET (RST / broken pipe after TCP connect) is NOT accepted as proof of an auth rejection on its own: the
 #   Go client can lose the race against the server closing after a TLS alert. It must be paired with
 #   an openssl witness that observed the explicit alert.
 classify_failure() {
@@ -105,7 +105,7 @@ classify_failure() {
     *"x509: certificate is valid for"*|*"doesn't contain any IP SANs"*|*"x509: cannot validate certificate for"*) echo TLS_SERVER_NAME_MISMATCH ;;
     *"no such host"*|*"Temporary failure in name resolution"*|*"server misbehaving"*|*"NXDOMAIN"*) echo DNS_FAILURE ;;
     *"connection refused"*)                                                 echo CONN_REFUSED ;;
-    *"connection reset by peer"*)                                           echo PEER_RESET ;;   # ambiguous alone: needs a TLS witness
+    *"connection reset by peer"*|*"broken pipe"*)                           echo PEER_RESET ;;   # ambiguous alone: needs a TLS witness
     *"i/o timeout"*|*"context deadline exceeded"*|*"DeadlineExceeded"*|*"exporter export timeout"*) echo NETWORK_TIMEOUT ;;
     "")                                                                     echo NONE ;;
     *)                                                                      echo OTHER ;;

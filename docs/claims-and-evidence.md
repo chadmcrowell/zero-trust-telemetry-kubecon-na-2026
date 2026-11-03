@@ -4,7 +4,12 @@ Each security claim this repository makes is listed with its implementation, the
 it, whether that case **has been executed**, and where the evidence is. A claim without an executed,
 passing case is shown as such. Wording in talks or slides should not go beyond the "Claim" column.
 
-## Last recorded run
+> **Status of this evidence: NOT CITABLE YET.** Every run so far was on a working tree with uncommitted
+> changes, on one macOS/Docker Desktop laptop, with the CI workflow never executed. The run below is kept
+> as a record of what was observed, not as release evidence. Replace it with a run on a clean commit
+> (`working_tree_dirty: false` in `meta.json`) before quoting any count.
+
+## Last recorded run (dirty tree — see banner)
 
 | Field | Value |
 |---|---|
@@ -23,7 +28,7 @@ Collector version.
 
 ## Claims
 
-| ID | Claim (property) | Implementation | Test case(s) | Status |
+| ID | Claim (property) | Implementation | Test case(s) | Status in the dirty-tree run (not citable) |
 |---|---|---|---|---|
 | K1 | Telemetry from an approved source with a valid client certificate reaches the backend through the gateway (end to end) | `manifests/`, `lab/backend`, `lab/traffic-generator` | D1, R1, E1, ROT0 | PASS |
 | K2 | The gateway **requires** a client certificate (PA) | receiver `tls.client_ca_file` in `manifests/00-foundation.yaml` | R2 | PASS |
