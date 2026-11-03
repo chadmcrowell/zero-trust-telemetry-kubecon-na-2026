@@ -2,7 +2,7 @@
 # which pins a dedicated kubeconfig (lab/.kube/config) and the context kind-zt-telemetry-lab.
 SHELL := /usr/bin/env bash
 
-.PHONY: help doctor quickstart demo test-quick lab-up deploy send-telemetry test lab-down status
+.PHONY: mutation-check help doctor quickstart demo test-quick lab-up deploy send-telemetry test lab-down status
 
 help:
 	@echo "NEW HERE?  make doctor && make quickstart      (~3 min with images cached, longer on a cold start; ends with a guided demo)"
@@ -26,6 +26,10 @@ demo:
 # Everything except the ~5 min certificate-rotation test
 test-quick:
 	@TESTS="test_telemetry_delivery.sh test_receiver_mtls.sh test_exporter_mtls.sh test_network_isolation.sh ../scenarios/poisoned-log/test.sh" tests/run-all.sh
+
+# Break controls on purpose and confirm the tests go red (~6 min, lab only)
+mutation-check:
+	@tests/mutation-check.sh
 
 lab-up:
 	@lab/bootstrap.sh

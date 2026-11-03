@@ -76,7 +76,7 @@ Blueprints in `manifests/` are not a complete cluster installation. Before attem
 ## What these artifacts demonstrate (and do not)
 
 - mTLS can authenticate peers and protect transport; it does not establish that the telemetry content itself is truthful. The poisoned-log scenario shows an authenticated producer delivering instruction-shaped text.
-- cert-manager can renew/reissue certificates and rotate private keys; **zero-downtime rotation is conditional** on certificate/key reload (or safe rolling replacement), CA overlap, and successful connection tests. The rotation test *measures* one run; it does not establish a general guarantee, and does not cover CA rotation or the gateway exporter's client-cert reload.
+- cert-manager can renew/reissue certificates and rotate private keys; **zero-downtime rotation is conditional** on certificate/key reload (or safe rolling replacement), CA overlap, and successful connection tests. The rotation test *measures* one run; it does not establish a general guarantee, and covers only one CA pair (no revocation, intermediates or producer-certificate rotation).
 - NetworkPolicy limits selected L3/L4 flows; it is not application-layer authorization or a substitute for credential hygiene. In the lab it is also what separates the producer from the backend, because all certificates share one CA.
 - Hubble provides observed datapath verdicts from eBPF-backed telemetry. It **does not verify TLS identities, cryptographic integrity, or kernel isolation in full**. The eBPF verifier does not prove a policy is correct.
 - The threat model includes Prometheus federation, logs, Falco, storage integrity, and AIOps; of these only the AIOps action-authorization path is simulated here.
